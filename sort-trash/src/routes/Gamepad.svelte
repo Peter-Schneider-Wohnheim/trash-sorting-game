@@ -5,9 +5,11 @@
     import {type Category, getCategories, getRandomTrashItem, getTrashItems, type TrashItem, loadTrashData} from "$lib/gameData";
     import {checkLanding} from "$lib/gameHelpers";
     import GameControls from "$lib/GameControls.svelte";
+    const showMemePlayer = false;
 
     let allTrashItems: TrashItem[] = [];
     let currentItem: TrashItem = getRandomTrashItem(allTrashItems);
+    let correctCategory: string | null = null;
     let roomNumber: string | null = null;
 
     // Game state variables
@@ -41,7 +43,13 @@
      * Updates score, mistakes, and selects a new item.
      */
     const checkLandingHandler = () => {
-        const result = checkLanding(currentItem, getCategories(), allTrashItems, score, mistakes);
+        const categories = getCategories();
+        const landedCategory = categories[currentItem.positionX]?.name;
+
+        const wasCorrect = landedCategory === currentItem.category;
+        correctCategory = wasCorrect ? null : currentItem.category;
+
+        const result = checkLanding(currentItem, categories, allTrashItems, score, mistakes);
         score = result.score;
         mistakes = result.mistakes;
         isGameOver = result.isGameOver;
@@ -184,6 +192,9 @@
     </span>
     </p>
     <!-- End Score and Mistakes Display -->
+    {#if correctCategory}
+        <p class="text-yellow-300 mt-2">Correct category: {correctCategory}</p>
+    {/if}
 
 
     <!-- Game Area -->
@@ -215,7 +226,9 @@
             {isPaused}
     />
 
-    <MemePlayer mistakeCount={mistakes}/>
+    {#if showMemePlayer}
+        <MemePlayer mistakeCount={mistakes}/>
+    {/if}
 </div>
 
 <style>
