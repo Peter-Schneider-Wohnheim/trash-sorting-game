@@ -1,4 +1,4 @@
-import trashData from "$lib/assets/trash.json";
+import trashData from "$lib/assets/trash_en.json";
 
 /**
  * Represents a trash category with a name and a corresponding color.
@@ -22,12 +22,12 @@ export type TrashItem = {
  * Mapping of category names to their associated colors.
  */
 export const categoryMap: Record<string, string> = {
-    "Restmuelltonne": "bg-gray-600",
-    "Gelber Sack": "bg-yellow-400",
-    "Papiertonne": "bg-blue-400",
-    "Biotonne": "bg-amber-700",
-    "Glascontainer": "bg-green-500",
-    "Wertstoffhof": "bg-red-500"
+    "Black Bin": "bg-gray-600",
+    "Yellow Bin": "bg-yellow-400",
+    "Blue Bin": "bg-blue-400",
+    "Brown Bin": "bg-amber-700",
+    "Glas Container": "bg-green-500",
+    "Recycling Center": "bg-red-500"
 };
 
 /**

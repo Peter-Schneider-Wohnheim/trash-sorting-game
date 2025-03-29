@@ -2,7 +2,6 @@
     import {onDestroy, onMount} from "svelte";
     import {browser} from "$app/environment";
     import MemePlayer from "./MemePlayer.svelte";
-    import {connectWebSocket, disconnectWebSocket} from "$lib/websocket";
     import {type Category, getCategories, getRandomTrashItem, getTrashItems, type TrashItem} from "$lib/gameData";
     import {checkLanding, handleSonstigesItem} from "$lib/gameHelpers";
     import GameModeExplanation from "$lib/GameModeExplanation.svelte";
@@ -10,8 +9,6 @@
 
     let isExpertMode = false;
     let showExplanation = false;
-    let lastGesture: string | null = null;
-    let isConnected = false;
 
     const categories: Category[] = getCategories();
     let allTrashItems: TrashItem[] = getTrashItems(isExpertMode);
@@ -121,16 +118,6 @@
 
     onMount(() => {
         if (browser) {
-            socket = connectWebSocket(
-                "ws://127.0.0.1:8765",
-                moveLeftHandler,
-                moveRightHandler,
-                handleSonstigesItemHandler,
-                () => isExpertMode,
-                (gesture) => lastGesture = gesture,
-                (status) => isConnected = status
-            );
-
             document.addEventListener("keydown", handleKeyPress);
             runGameLoop();
         }
@@ -139,7 +126,6 @@
     onDestroy(() => {
         if (browser) {
             document.removeEventListener("keydown", handleKeyPress);
-            disconnectWebSocket();
             clearInterval(interval);
         }
     });
@@ -228,24 +214,6 @@
             onToggleMode={toggleMode}
             {isPaused}
     />
-
-    <!-- WebSocket Status & Last Gesture -->
-    <div class="text-white text-sm mt-5 flex items-center space-x-4">
-        <div class="flex items-center">
-        <span class={isConnected ? "text-green-400" : "text-red-500"}>
-            {isConnected ? "✅ Connected" : "❌ Not Connected"}
-        </span>
-        </div>
-
-        {#if lastGesture}
-            <div>
-                <span class="text-gray-300">Last gesture: </span>
-                <span class="font-semibold text-white">{lastGesture}</span>
-            </div>
-        {/if}
-    </div>
-    <!-- End WebSocket Status & Last Gesture -->
-
 
     <MemePlayer mistakeCount={mistakes}/>
 </div>
