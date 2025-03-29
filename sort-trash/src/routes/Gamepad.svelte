@@ -121,26 +121,38 @@
         document.cookie = `game_failures=${failedAttempts}; path=/; max-age=31536000`;
     }
 
-    function generatePdf(passed: boolean, room: string | null) { // New function to generate PDF
+    function generatePdf(passed: boolean, room: string | null) {
         const doc = new jsPDF();
 
-        doc.setFontSize(16);
-        doc.text("Kenntnisnachweis Müllentsorgung", 20, 30);
+        // Füge das Logo oben rechts ein
+        const logo = new Image();
+        logo.src = "/logo/logo.jpg"; // relativer Pfad aus /static
 
-        doc.setFontSize(12);
-        doc.text(`Der Bewohner der Einheit ${room || "?"} hat die Prüfung zur korrekten Müllentsorgung`, 20, 50);
-        doc.setFont(undefined, "bold");
-        doc.text(passed ? "bestanden." : "nicht bestanden.", 20, 58);
-        doc.setFont(undefined, "normal");
+        logo.onload = () => {
+            doc.addImage(logo, "PNG", 150, 10, 40, 40); // x, y, width, height
 
-        doc.text(`Eine Nachschulung durch den Hausmeister ist`, 20, 70);
-        doc.setFont(undefined, "bold");
-        doc.text(passed ? "nicht erforderlich." : "erforderlich.", 20, 78);
-        doc.setFont(undefined, "normal");
+            // Text mit Abstand darunter
+            doc.setFontSize(16);
+            doc.text("Kenntnisnachweis Müllentsorgung", 20, 30);
 
-        doc.text("Und in diesem Sinne: APRIL APRIL / Happy April fools day!", 20, 100);
+            doc.setFontSize(12);
+            doc.text(`Der Bewohner der Einheit ${room || "?"} hat die Prüfung zur korrekten Müllentsorgung`, 20, 80);
+            doc.setFont(undefined, "bold");
+            doc.text(passed ? "bestanden." : "nicht bestanden.", 20, 88);
+            doc.setFont(undefined, "normal");
 
-        doc.save("kenntnisnachweis_muellentsorgung.pdf");
+            doc.text("Eine Nachschulung durch den Hausmeister ist", 20, 100);
+            doc.setFont(undefined, "bold");
+            doc.text(passed ? "nicht erforderlich." : "erforderlich.", 20, 108);
+            doc.setFont(undefined, "normal");
+
+            doc.setFontSize(16);
+            doc.text("And with that: Happy April fools day! :P", 20, 130);
+            doc.setFontSize(12);
+            doc.text("* So just to be completely clear: this was all just a joke ^^", 20, 140);
+
+            doc.save("kenntnisnachweis_muellentsorgung.pdf");
+        };
     }
 
     function promptUserPreferences() {
