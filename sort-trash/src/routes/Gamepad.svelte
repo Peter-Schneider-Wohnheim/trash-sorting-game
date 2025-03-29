@@ -20,7 +20,7 @@
     // Game state variables
     let score = 0;
     let mistakes = 0;
-    let isGameOver = true;
+    let isGameOver = false;
     let isPaused = true;
 
     // Constants for game area dimensions
