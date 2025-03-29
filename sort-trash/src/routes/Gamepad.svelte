@@ -2,12 +2,13 @@
     import {onDestroy, onMount} from "svelte";
     import {browser} from "$app/environment";
     import MemePlayer from "./MemePlayer.svelte";
-    import {type Category, getCategories, getRandomTrashItem, getTrashItems, type TrashItem} from "$lib/gameData";
+    import {type Category, getCategories, getRandomTrashItem, getTrashItems, type TrashItem, loadTrashData} from "$lib/gameData";
     import {checkLanding} from "$lib/gameHelpers";
     import GameControls from "$lib/GameControls.svelte";
 
-    let allTrashItems: TrashItem[] = getTrashItems(false);
+    let allTrashItems: TrashItem[] = [];
     let currentItem: TrashItem = getRandomTrashItem(allTrashItems);
+    let roomNumber: string | null = null;
 
     // Game state variables
     let score = 0;
@@ -91,8 +92,39 @@
 
     let socket: WebSocket;
 
-    onMount(() => {
+    function getCookie(name: string): string | null {
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+    }
+
+    function promptUserPreferences() {
+        if (!browser) return;
+
+        let language = getCookie("game_lang");
+        let room = getCookie("game_room");
+
+        if (!language) {
+            language = prompt("Choose your language: 'en' or 'de'")?.toLowerCase() === "de" ? "de" : "en";
+            document.cookie = `game_lang=${language}; path=/; max-age=31536000`;
+        }
+
+        if (!room) {
+            room = prompt("Enter your room number:");
+            document.cookie = `game_room=${room}; path=/; max-age=31536000`;
+        }
+
+        return { language, room };
+    }
+
+    onMount(async () => {
         if (browser) {
+            const prefs = promptUserPreferences();
+            roomNumber = prefs.room;
+
+            await loadTrashData(prefs.language);
+            allTrashItems = getTrashItems();
+            currentItem = getRandomTrashItem(allTrashItems);
+
             document.addEventListener("keydown", handleKeyPress);
             runGameLoop();
         }
@@ -123,8 +155,9 @@
 <div class="flex flex-col items-center justify-center h-screen bg-gray-900">
     <!-- Heading and Explainations -->
     <h1 class="text-white text-2xl font-bold mb-4">Mülltrennung-Simulator 🚯</h1>
-    <p class="text-white mb-4">Use the arrow keys (or swipe left / right) to sort the item into the correct bucket.<br>
-        Press f or execute the rotate gesture, in case the item does not fit any category.</p>
+
+    <p class="text-white mb-2">Room: {roomNumber}</p>
+    <p class="text-white mb-4">Sort the item into the correct bin using the arrow keys.</p>
     <!-- End Heading and Explainations -->
 
 
@@ -147,7 +180,7 @@
                 class:text-white={mistakes <= 1}
                 class:text-yellow-400={mistakes > 1 && mistakes < 3}
         >
-        Fehler: {mistakes} / 5
+        Mistakes: {mistakes} / 5
     </span>
     </p>
     <!-- End Score and Mistakes Display -->
