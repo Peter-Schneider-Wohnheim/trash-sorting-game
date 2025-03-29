@@ -45,6 +45,21 @@ function updateFailureCookie() {
     document.cookie = `game_failures=${failedAttempts}; path=/; max-age=31536000`;
 }
 
+function generatePdf(passed: boolean, room: string | null) {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Kenntnisnachweis Müllentsorgung", 20, 30);
+
+    doc.setFontSize(12);
+    doc.text(`Der Bewohner der Einheit ${room || "?"} hat die Prüfung zur korrekten Müllentsorgung ${passed ? "bestanden" : "nicht bestanden"}.`, 20, 50);
+    doc.text(`Eine Nachschulung durch den Hausmeister ist ${passed ? "nicht erforderlich" : "erforderlich"}.`, 20, 60);
+
+    doc.text("Und in diesem Sinne: APRIL APRIL / Happy April fools day! 🤭", 20, 80);
+
+    doc.save("muellprüfung.pdf");
+}
+
 export async function loadTrashData(language: string): Promise<void> {
     if (language === "de") {
         trashData = (await import("$lib/assets/trash_de.json")).default;

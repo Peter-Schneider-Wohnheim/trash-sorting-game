@@ -5,6 +5,8 @@
     import {type Category, getCategories, getRandomTrashItem, getTrashItems, type TrashItem, loadTrashData} from "$lib/gameData";
     import {checkLanding} from "$lib/gameHelpers";
     import GameControls from "$lib/GameControls.svelte";
+    import jsPDF from "jspdf"; // Import jsPDF
+
     const showMemePlayer = false;
 
     const maxFailures = 5;
@@ -18,7 +20,7 @@
     // Game state variables
     let score = 0;
     let mistakes = 0;
-    let isGameOver = false;
+    let isGameOver = true;
     let isPaused = true;
 
     // Constants for game area dimensions
@@ -117,6 +119,28 @@
         const current = parseInt(getCookie("game_failures") || "0", 10);
         failedAttempts = isNaN(current) ? 0 : current + 1;
         document.cookie = `game_failures=${failedAttempts}; path=/; max-age=31536000`;
+    }
+
+    function generatePdf(passed: boolean, room: string | null) { // New function to generate PDF
+        const doc = new jsPDF();
+
+        doc.setFontSize(16);
+        doc.text("Kenntnisnachweis Müllentsorgung", 20, 30);
+
+        doc.setFontSize(12);
+        doc.text(`Der Bewohner der Einheit ${room || "?"} hat die Prüfung zur korrekten Müllentsorgung`, 20, 50);
+        doc.setFont(undefined, "bold");
+        doc.text(passed ? "bestanden." : "nicht bestanden.", 20, 58);
+        doc.setFont(undefined, "normal");
+
+        doc.text(`Eine Nachschulung durch den Hausmeister ist`, 20, 70);
+        doc.setFont(undefined, "bold");
+        doc.text(passed ? "nicht erforderlich." : "erforderlich.", 20, 78);
+        doc.setFont(undefined, "normal");
+
+        doc.text("Und in diesem Sinne: APRIL APRIL / Happy April fools day!", 20, 100);
+
+        doc.save("kenntnisnachweis_muellentsorgung.pdf");
     }
 
     function promptUserPreferences() {
@@ -238,6 +262,12 @@
         {:else}
             <p class="text-red-500 text-xl mt-4">You made too many mistakes! Final score: {score}</p>
         {/if}
+        <button
+            on:click={() => generatePdf(score >= 20, roomNumber)}
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+            Download certificate
+        </button>
     {/if}
 
     <GameControls
