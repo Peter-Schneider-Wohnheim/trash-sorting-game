@@ -26,26 +26,6 @@ export function checkLanding(currentItem: TrashItem, categories: Category[], all
 }
 
 /**
- * Handles the "rotate" gesture or "f" key for Sonstige items.
- */
-export function handleSonstigesItem(currentItem: TrashItem, allTrashItems: TrashItem[], score: number, mistakes: number) {
-    if (currentItem.category === "Sonstige") {
-        score++;
-    } else {
-        mistakes++;
-    }
-
-    const isGameOver = mistakes >= 5;
-
-    return {
-        score,
-        mistakes,
-        isGameOver,
-        newItem: getRandomItem(allTrashItems)
-    };
-}
-
-/**
  * Selects a random trash item from the list.
  */
 function getRandomItem(items: TrashItem[]): TrashItem {

@@ -3,23 +3,11 @@
     import {browser} from "$app/environment";
     import MemePlayer from "./MemePlayer.svelte";
     import {type Category, getCategories, getRandomTrashItem, getTrashItems, type TrashItem} from "$lib/gameData";
-    import {checkLanding, handleSonstigesItem} from "$lib/gameHelpers";
-    import GameModeExplanation from "$lib/GameModeExplanation.svelte";
+    import {checkLanding} from "$lib/gameHelpers";
     import GameControls from "$lib/GameControls.svelte";
 
-    let isExpertMode = false;
-    let showExplanation = false;
-
-    const categories: Category[] = getCategories();
-    let allTrashItems: TrashItem[] = getTrashItems(isExpertMode);
+    let allTrashItems: TrashItem[] = getTrashItems(false);
     let currentItem: TrashItem = getRandomTrashItem(allTrashItems);
-
-
-    const toggleMode = () => {
-        isExpertMode = !isExpertMode;
-        allTrashItems = getTrashItems(isExpertMode); // Reload items based on mode
-        startGame(); // Restart game when mode changes
-    };
 
     // Game state variables
     let score = 0;
@@ -29,7 +17,7 @@
 
     // Constants for game area dimensions
     const categoryHeightThreshold = 80;
-    const categoryWidth = 100 / categories.length;
+    const categoryWidth = 100 / getCategories().length;
 
     let interval: number;
 
@@ -37,14 +25,14 @@
      * Moves the current item one step to the left, looping around if necessary.
      */
     const moveLeftHandler = () => {
-        currentItem = {...currentItem, positionX: (currentItem.positionX - 1 + categories.length) % categories.length};
+        currentItem = {...currentItem, positionX: (currentItem.positionX - 1 + getCategories().length) % getCategories().length};
     };
 
     /**
      * Moves the current item one step to the right, looping around if necessary.
      */
     const moveRightHandler = () => {
-        currentItem = {...currentItem, positionX: (currentItem.positionX + 1) % categories.length};
+        currentItem = {...currentItem, positionX: (currentItem.positionX + 1) % getCategories().length};
     };
 
     /**
@@ -52,20 +40,7 @@
      * Updates score, mistakes, and selects a new item.
      */
     const checkLandingHandler = () => {
-        const result = checkLanding(currentItem, categories, allTrashItems, score, mistakes);
-        score = result.score;
-        mistakes = result.mistakes;
-        isGameOver = result.isGameOver;
-        currentItem = result.newItem;
-
-        if (isGameOver) clearInterval(interval);
-    };
-
-    /**
-     * Handles the "rotate" gesture or "f" key, used for "Sonstige" items.
-     */
-    const handleSonstigesItemHandler = () => {
-        const result = handleSonstigesItem(currentItem, allTrashItems, score, mistakes);
+        const result = checkLanding(currentItem, getCategories(), allTrashItems, score, mistakes);
         score = result.score;
         mistakes = result.mistakes;
         isGameOver = result.isGameOver;
@@ -134,7 +109,6 @@
      * Handles user keyboard input.
      * - Left Arrow (`←`): Moves the item left.
      * - Right Arrow (`→`): Moves the item right.
-     * - "f" key: Activates "Sonstige" discard (only in Expert Mode).
      */
     const handleKeyPress = (event: KeyboardEvent) => {
         if (isPaused || isGameOver) return;
@@ -143,9 +117,6 @@
 
         if (event.key === "ArrowLeft") moveLeftHandler();
         if (event.key === "ArrowRight") moveRightHandler();
-        if (event.key === "f" && isExpertMode) {
-            handleSonstigesItemHandler();
-        }
     };
 </script>
 
@@ -154,9 +125,6 @@
     <h1 class="text-white text-2xl font-bold mb-4">Mülltrennung-Simulator 🚯</h1>
     <p class="text-white mb-4">Use the arrow keys (or swipe left / right) to sort the item into the correct bucket.<br>
         Press f or execute the rotate gesture, in case the item does not fit any category.</p>
-    <p class="text-white mb-4">Current mode: {isExpertMode ? "Expert Mode" : "Normal Mode"} | <a class="cursor-pointer"
-                                                                                                 on:click={() => showExplanation = true}>❓</a>
-    </p>
     <!-- End Heading and Explainations -->
 
 
@@ -194,7 +162,7 @@
             </div>
         {/if}
         <div class="absolute bottom-0 left-0 w-full flex">
-            {#each categories as category}
+            {#each getCategories() as category}
                 <div class={`flex-1 h-20 flex items-center justify-center text-white font-bold ${category.color}`}>{category.name}</div>
             {/each}
         </div>
@@ -211,16 +179,11 @@
             onStart={startGame}
             onPause={pauseGame}
             onNew={newGame}
-            onToggleMode={toggleMode}
             {isPaused}
     />
 
     <MemePlayer mistakeCount={mistakes}/>
 </div>
-
-{#if showExplanation}
-    <GameModeExplanation onClose={() => (showExplanation = false)} />
-{/if}
 
 <style>
     @keyframes shake {
