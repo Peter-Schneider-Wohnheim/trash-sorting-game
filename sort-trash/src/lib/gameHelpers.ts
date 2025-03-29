@@ -17,6 +17,10 @@ export function checkLanding(currentItem: TrashItem, categories: Category[], all
 
     const isGameOver = mistakes >= 5;
 
+    if (mistakes >= 5) {
+        updateFailureCookie();
+    }
+
     return {
         score,
         mistakes,
@@ -31,3 +35,12 @@ export function checkLanding(currentItem: TrashItem, categories: Category[], all
 function getRandomItem(items: TrashItem[]): TrashItem {
     return { ...items[Math.floor(Math.random() * items.length)] };
 }
+
+function updateFailureCookie() {
+    const current = parseInt(getCookie("game_failures") || "0", 10);
+    failedAttempts = isNaN(current) ? 0 : current + 1;
+    document.cookie = `game_failures=${failedAttempts}; path=/; max-age=31536000`;
+}
+
+const maxFailures = 5;
+let failedAttempts = 0;

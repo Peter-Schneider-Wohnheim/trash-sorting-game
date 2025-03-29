@@ -31,9 +31,18 @@ export const categoryMap: Record<string, string> = {
 let trashData: Record<string, string[]> = {};
 let roomNumber: string | null = null;
 
+const maxFailures = 5;
+let failedAttempts = 0;
+
 function getCookie(name: string): string | null {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     return match ? match[2] : null;
+}
+
+function updateFailureCookie() {
+    const current = parseInt(getCookie("game_failures") || "0", 10);
+    failedAttempts = isNaN(current) ? 0 : current + 1;
+    document.cookie = `game_failures=${failedAttempts}; path=/; max-age=31536000`;
 }
 
 export async function loadTrashData(language: string): Promise<void> {
@@ -87,6 +96,8 @@ function promptUserPreferences() {
 
     let language = getCookie("game_lang");
     let room = getCookie("game_room");
+
+    failedAttempts = parseInt(getCookie("game_failures") || "0", 10);
 
     if (!language) {
         language = prompt("Choose your language: 'en' or 'de'")?.toLowerCase() === "de" ? "de" : "en";

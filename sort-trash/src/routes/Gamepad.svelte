@@ -7,6 +7,9 @@
     import GameControls from "$lib/GameControls.svelte";
     const showMemePlayer = false;
 
+    const maxFailures = 5;
+    let failedAttempts = 0;
+
     let allTrashItems: TrashItem[] = [];
     let currentItem: TrashItem = getRandomTrashItem(allTrashItems);
     let correctCategory: string | null = null;
@@ -52,7 +55,12 @@
         const result = checkLanding(currentItem, categories, allTrashItems, score, mistakes);
         score = result.score;
         mistakes = result.mistakes;
-        isGameOver = result.isGameOver;
+        isGameOver = result.isGameOver || score >= 20;
+
+        if (mistakes >= 5) {
+            updateFailureCookie();
+        }
+
         currentItem = result.newItem;
 
         if (isGameOver) clearInterval(interval);
@@ -105,11 +113,18 @@
         return match ? match[2] : null;
     }
 
+    function updateFailureCookie() {
+        const current = parseInt(getCookie("game_failures") || "0", 10);
+        failedAttempts = isNaN(current) ? 0 : current + 1;
+        document.cookie = `game_failures=${failedAttempts}; path=/; max-age=31536000`;
+    }
+
     function promptUserPreferences() {
         if (!browser) return;
 
         let language = getCookie("game_lang");
         let room = getCookie("game_room");
+        failedAttempts = parseInt(getCookie("game_failures") || "0", 10);
 
         if (!language) {
             language = prompt("Choose your language: 'en' or 'de'")?.toLowerCase() === "de" ? "de" : "en";
@@ -166,6 +181,7 @@
 
     <p class="text-white mb-2">Room: {roomNumber}</p>
     <p class="text-white mb-4">Sort the item into the correct bin using the arrow keys.</p>
+    <p class="text-white mb-2">Remaining attempts: {Math.max(maxFailures - failedAttempts, 0)} / {maxFailures}</p>
     <!-- End Heading and Explainations -->
 
 
@@ -178,7 +194,7 @@
             class:text-white={score <= 5}
             class:text-yellow-400={score > 5 && score < 10}
     >
-        Score: {score}
+        Score: {score} / 20
     </span>
 
         <span
@@ -215,8 +231,13 @@
 
 
     {#if isGameOver}
-        <p class="text-red-500 text-xl mt-4">Du hast zu viele Gegenstände falsch sortiert! Bitte vereinabare einen
-            Termin mit Carsten Stahl. Finale Punktzahl: {score}</p>
+        {#if score >= 20}
+            <p class="text-green-400 text-xl mt-4">You passed the game! Final score: {score}</p>
+        {:else if failedAttempts >= maxFailures}
+            <p class="text-red-500 text-xl mt-4">Too many failed attempts ({failedAttempts}). Please contact an instructor.</p>
+        {:else}
+            <p class="text-red-500 text-xl mt-4">You made too many mistakes! Final score: {score}</p>
+        {/if}
     {/if}
 
     <GameControls
