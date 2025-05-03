@@ -2,7 +2,7 @@
 > We deployed this as an April fools joke: tenants were told they need to do this game as an online test, since waste disposal does not work properly. In the end, they can download a certificate, which needed to be submitted to the caretaker, indicating whether they passed or need to do an extra course + test with the caretaker (at least they were told so ;).
 
 ## Overview
-Mülltrennungs-Simulator is a fun and interactive browser game that teaches players how to properly sort trash. Inspired by Tetris, trash items fall from the center of the screen, and players must move them into the correct waste category. Mülltrennungs-Simulator makes learning about recycling playful and engaging.
+Trash Sorting Game is a fun and interactive browser game that teaches players how to properly sort trash. Inspired by Tetris, trash items fall from the center of the screen, and players must move them into the correct waste category. Trash Sorting Game makes learning about recycling playful and engaging.
 
 ## How to Play
 - Use the arrow keys to move the falling trash item.
@@ -10,20 +10,6 @@ Mülltrennungs-Simulator is a fun and interactive browser game that teaches play
 - Wrong placements increase your mistake count.
 - The game ends after 5 mistakes.
 - Items wrap around the left/right edges.
-
-## Game Modes
-### Normal Mode (default):
-- Only the 6 main trash categories are included.
-- The rotate gesture / `f` key is disabled.
-- Items that don’t belong to any known category are not shown.
-
-### Expert Mode:
-- Includes a 7th category: “Sonstige” (miscellaneous).
-- Use the rotate gesture or press `f` to discard such items.
-- More challenging for eco-experts 💪
-
-You can toggle the game mode anytime using the "Toggle mode" button.
-
 
 ## Categories of Waste
 The game includes the following waste categories:
@@ -33,7 +19,6 @@ The game includes the following waste categories:
 - Biotonne
 - Glascontainer
 - Wertstoffhof
-- Sonstige (Expert Mode only)
 
 ## Game Logic
 ### Initial Setup
