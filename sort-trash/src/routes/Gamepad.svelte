@@ -8,6 +8,9 @@
     import jsPDF from "jspdf";
     const showMemePlayer = false;
 
+    const maxFailures = 5;
+    let failedAttempts = 0;
+
     let allTrashItems: TrashItem[] = [];
     let currentItem: TrashItem = getRandomTrashItem(allTrashItems);
     let correctCategory: string | null = null;
@@ -54,7 +57,12 @@
         const result = checkLanding(currentItem, categories, allTrashItems, score, mistakes);
         score = result.score;
         mistakes = result.mistakes;
-        isGameOver = result.isGameOver;
+        isGameOver = result.isGameOver || score >= 20;
+
+        if (mistakes >= 5) {
+            updateFailureCookie();
+        }
+
         currentItem = result.newItem;
 
         if (isGameOver) clearInterval(interval);
@@ -109,11 +117,52 @@
         return match ? match[2] : null;
     }
 
+    function updateFailureCookie() {
+        const current = parseInt(getCookie("game_failures") || "0", 10);
+        failedAttempts = isNaN(current) ? 0 : current + 1;
+        document.cookie = `game_failures=${failedAttempts}; path=/; max-age=31536000`;
+    }
+
+    function generatePdf(passed: boolean, room: string | null) {
+        const doc = new jsPDF();
+
+        // Füge das Logo oben rechts ein
+        const logo = new Image();
+        logo.src = "/logo/logo.jpg"; // relativer Pfad aus /static
+
+        logo.onload = () => {
+            doc.addImage(logo, "PNG", 150, 10, 40, 40); // x, y, width, height
+
+            // Text mit Abstand darunter
+            doc.setFontSize(16);
+            doc.text("Kenntnisnachweis Müllentsorgung", 20, 30);
+
+            doc.setFontSize(12);
+            doc.text(`Der Bewohner der Einheit ${room || "?"} hat die Prüfung zur korrekten Müllentsorgung`, 20, 80);
+            doc.setFont(undefined, "bold");
+            doc.text(passed ? "bestanden." : "nicht bestanden.", 20, 88);
+            doc.setFont(undefined, "normal");
+
+            doc.text("Eine Nachschulung durch den Hausmeister ist", 20, 100);
+            doc.setFont(undefined, "bold");
+            doc.text(passed ? "nicht erforderlich." : "erforderlich.", 20, 108);
+            doc.setFont(undefined, "normal");
+
+            doc.setFontSize(16);
+            doc.text("And with that: Happy April fools day! :P", 20, 130);
+            doc.setFontSize(12);
+            doc.text("* So just to be completely clear: this was all just a joke ^^", 20, 140);
+
+            doc.save("kenntnisnachweis_muellentsorgung.pdf");
+        };
+    }
+
     function promptUserPreferences() {
         if (!browser) return;
 
         let language = getCookie("game_lang");
         let room = getCookie("game_room");
+        failedAttempts = parseInt(getCookie("game_failures") || "0", 10);
 
         if (!language) {
             language = prompt("Choose your language: 'en' or 'de'")?.toLowerCase() === "de" ? "de" : "en";
@@ -202,6 +251,7 @@
 
     <p class="text-white mb-2">Room: {roomNumber}</p>
     <p class="text-white mb-4">Sort the item into the correct bin using the arrow keys.</p>
+    <p class="text-white mb-2">Remaining attempts: {Math.max(maxFailures - failedAttempts, 0)} / {maxFailures}</p>
     <!-- End Heading and Explainations -->
 
 
@@ -214,7 +264,8 @@
             class:text-white={score <= 5}
             class:text-yellow-400={score > 5 && score < 10}
     >
-        Score: {score} / {winningScore}
+
+    Score: {score} / {winningScore}
     </span>
 
         <span
