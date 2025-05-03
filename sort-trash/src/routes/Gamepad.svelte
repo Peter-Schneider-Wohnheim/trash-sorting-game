@@ -5,8 +5,7 @@
     import {type Category, getCategories, getRandomTrashItem, getTrashItems, type TrashItem, loadTrashData} from "$lib/gameData";
     import {checkLanding} from "$lib/gameHelpers";
     import GameControls from "$lib/GameControls.svelte";
-    import jsPDF from "jspdf"; // Import jsPDF
-
+    import jsPDF from "jspdf";
     const showMemePlayer = false;
 
     const maxFailures = 5;
@@ -22,6 +21,7 @@
     let mistakes = 0;
     let isGameOver = false;
     let isPaused = true;
+    const winningScore = 15;
 
     // Constants for game area dimensions
     const categoryHeightThreshold = 80;
@@ -66,6 +66,10 @@
         currentItem = result.newItem;
 
         if (isGameOver) clearInterval(interval);
+
+        if (score >= winningScore) {
+            isGameOver = true;
+        }
     };
 
     /**
@@ -107,8 +111,6 @@
             }, 500);
         }
     };
-
-    let socket: WebSocket;
 
     function getCookie(name: string): string | null {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -209,6 +211,38 @@
         if (event.key === "ArrowLeft") moveLeftHandler();
         if (event.key === "ArrowRight") moveRightHandler();
     };
+
+    function generatePdf(passed: boolean, room: string | null) {
+        const doc = new jsPDF();
+
+        const logo = new Image();
+        logo.src = "/logo/logo.jpg";
+
+        logo.onload = () => {
+            doc.addImage(logo, "PNG", 150, 10, 40, 40);
+
+            doc.setFontSize(16);
+            doc.text("Kenntnisnachweis Müllentsorgung", 20, 30);
+
+            doc.setFontSize(12);
+            doc.text(`Der Bewohner der Einheit ${room || "?"} hat die Prüfung zur korrekten Müllentsorgung`, 20, 80);
+            doc.setFont(undefined, "bold");
+            doc.text(passed ? "bestanden." : "nicht bestanden.", 20, 88);
+            doc.setFont(undefined, "normal");
+
+            doc.text("Eine Nachschulung durch den Hausmeister ist", 20, 100);
+            doc.setFont(undefined, "bold");
+            doc.text(passed ? "nicht erforderlich." : "erforderlich.", 20, 108);
+            doc.setFont(undefined, "normal");
+
+            doc.setFontSize(16);
+            doc.text("And with that: Happy April fools day! :P", 20, 130);
+            doc.setFontSize(12);
+            doc.text("* So just to be completely clear: this was all just a joke ^^", 20, 140);
+
+            doc.save("kenntnisnachweis_muellentsorgung.pdf");
+        };
+    }
 </script>
 
 <div class="flex flex-col items-center justify-center h-screen bg-gray-900">
@@ -230,7 +264,8 @@
             class:text-white={score <= 5}
             class:text-yellow-400={score > 5 && score < 10}
     >
-        Score: {score} / 20
+
+    Score: {score} / {winningScore}
     </span>
 
         <span
@@ -267,18 +302,16 @@
 
 
     {#if isGameOver}
-        {#if score >= 20}
-            <p class="text-green-400 text-xl mt-4">You passed the game! Final score: {score}</p>
-        {:else if failedAttempts >= maxFailures}
-            <p class="text-red-500 text-xl mt-4">Too many failed attempts ({failedAttempts}). Please contact an instructor.</p>
+        {#if score >= winningScore}
+            <p class="text-green-400 text-xl mt-4">🎉 Congrats! Please download your cerificate and submit it to the caretaker.</p>
         {:else}
-            <p class="text-red-500 text-xl mt-4">You made too many mistakes! Final score: {score}</p>
+            <p class="text-red-500 text-xl mt-4">You sorted too many items wrong. Please download your certificate and submit it to the caretaker.</p>
         {/if}
         <button
-            on:click={() => generatePdf(score >= 20, roomNumber)}
-            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            on:click={() => generatePdf(score >= winningScore, roomNumber)}
         >
-            Download certificate
+            📄 Download certificate
         </button>
     {/if}
 
